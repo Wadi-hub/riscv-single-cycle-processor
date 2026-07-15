@@ -17,14 +17,14 @@ This is an ongoing project — currently supports a working subset of RV32I, wit
 ## Repo Structure
 ├── source_files/          # Processor modules — datapath, control unit, ALU, register file, PC, etc.
 ├── test_benches/           # SystemVerilog testbenches for individual units and the full wrapper
-├── sample_program.s        # Sample RISC-V assembly program used for verification
+├── assembly_test_code.s        # Sample RISC-V assembly program used for verification
 └── ripes_verification.png  # Verification screenshot
 
 ## Verification
 
-The processor was tested by writing a RISC-V assembly test program (`sample_program.s`), assembling and running it in 
-[Ripes](https://github.com/mortbopet/Ripes) to get expected register values, then running the equivalent instructions through the Verilog 
-testbench in Vivado and confirming matching results.
+The processor was tested by writing a RISC-V assembly test program (`assembly_test_code.s`), assembling and running it in 
+[Ripes](https://github.com/mortbopet/Ripes) to get expected register values, then running the equivalent instructions 
+through the Verilog testbench in Vivado and confirming matching results.
 
 ![Ripes verification](ripes_verification.png)
 
