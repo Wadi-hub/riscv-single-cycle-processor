@@ -1,8 +1,15 @@
-# RISC-V Single-Cycle Processor
+# RISC-V Processor (Single-Cycle → Pipelined)
 
-A single-cycle RISC-V (RV32I subset) processor implemented in SystemVerilog, built and simulated in Vivado, and cross-verified against [Ripes](https://github.com/mortbopet/Ripes).
+A RISC-V (RV32I subset) processor implemented in SystemVerilog, built and simulated in Vivado, and cross-verified against [Ripes](https://github.com/mortbopet/Ripes).
 
-This is an ongoing project — currently supports a working subset of RV32I, with full instruction coverage and a move to a pipelined design planned next.
+This is an ongoing project tracking the evolution of the design: starting from a single-cycle implementation, then restructured into a 5-stage pipeline, with hazard handling and branch prediction planned next.
+
+| Stage | Status | Tag |
+|---|---|---|
+| Single-cycle | Complete, verified | [`v1-single-cycle`](../../releases/tag/v1-single-cycle) |
+| Pipelined (5-stage) | Functional, hazards not yet handled | [`v2-pipelined`](../../releases/tag/v2-pipelined) |
+| Hazard detection & forwarding | Planned | — |
+| Branch prediction | Planned | — |
 
 ## Supported Instructions
 
@@ -15,28 +22,43 @@ This is an ongoing project — currently supports a working subset of RV32I, wit
 | beq | B-type | imm[12,10:5] \| rs2 \| rs1 \| funct3 \| imm[4:1,11] \| opcode |
 
 ## Repo Structure
+## Repo Structure
 ```
-├── source_files/          # Processor modules — datapath, control unit, ALU, register file, PC, etc.
-├── test_benches/           # SystemVerilog testbenches for individual units and the full wrapper
-├── assembly_test_code.s        # Sample RISC-V assembly program used for verification
-└── ripes_verification.png  # Verification screenshot
+├── single_cycle/
+│   ├── source_files/           # Single-cycle datapath, control unit, ALU, register file, PC, etc.
+│   ├── test_benches/           # Testbenches for the single-cycle wrapper and individual units
+│   ├── assembly_code/          # RISC-V assembly test programs
+│   ├── assembly_test_code.s    # Primary sample program used for verification
+│   └── ripes_verification.png  # Verification screenshot
+├── pipelined/
+│   ├── sources/                # Pipelined datapath — wrapper, pipeline registers (if_id, id_ex, ex_mem, mem_wb), control unit, ALU
+│   └── sims/                   # Simulation waveforms and testbench outputs
+├── images/                     # Shared diagrams and screenshots
+└── riscv_code.docx             # Notes/documentation
 ```
 
-## Verification
+## Single-Cycle Design
 
-The processor was tested by writing a RISC-V assembly test program (`assembly_test_code.s`), assembling and running it in 
-[Ripes](https://github.com/mortbopet/Ripes) to get expected register values, then running the equivalent instructions 
-through the Verilog testbench in Vivado and confirming matching results.
+Full datapath — PC, instruction memory, register file, immediate generator, control unit, ALU, branch logic, data memory — implemented and verified end-to-end.
 
-![Ripes verification](ripes_verification.png)
+**Verification:** wrote a RISC-V assembly test program (`assembly_test_code.s`), ran it in [Ripes](https://github.com/mortbopet/Ripes) to get expected register values, then ran the equivalent instructions through the Verilog testbench in Vivado and confirmed matching results.
+
+![Ripes verification](single_cycle/ripes_verification.png)
+
+## Pipelined Design
+
+Restructured the single-cycle datapath into a classic 5-stage pipeline (IF → ID → EX → MEM → WB), with dedicated pipeline register modules (`if_id`, `id_ex`, `ex_mem`, `mem_wb`) inserted between stages. Verified against the same array-sum test program, with waveform inspection confirming correct instruction overlap (new instruction fetched every cycle, constant fetch-to-writeback latency, multiple instructions in flight simultaneously).
+
+**Known limitation:** no hazard detection or forwarding yet — data/control hazards (e.g. back-to-back dependent instructions, branches) are not currently handled correctly. This is the next stage of the project.
 
 ## What's Next
 
+- Hazard detection unit and data forwarding (EX/MEM and MEM/WB forwarding paths)
+- Branch/control hazard handling — static or dynamic prediction
 - Extend instruction coverage to the full RV32I base ISA
-- Move from single-cycle to a pipelined design — hazard detection, forwarding, and branch handling
 
 ## Tools Used
 
 - SystemVerilog
 - Xilinx Vivado (simulation)
-- [Ripes](https://github.com/mortbopet/Ripes) (reference verification)  
+- [Ripes](https://github.com/mortbopet/Ripes) (reference verification)
